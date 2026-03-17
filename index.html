@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1C1C1C">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Namjooning">
+  <meta name="description" content="Your daily intentional living journal">
+
+  <title>Namjooning</title>
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&family=DM+Mono:ital@0;1&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:      #1C1C1C;
+      --text:    #F5F5DC;
+      --accent:  #FFDDA0;
+      --card:    #232323;
+      --border:  #363636;
+      --muted:   rgba(245,245,220,0.16);
+      --line:    rgba(255,221,160,0.065);
+      --r-lg:    20px;
+      --r-md:    14px;
+      --r-sm:    10px;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box; margin: 0; padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.875rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 1rem 6rem;
+      /* safe area for notched phones */
+      padding-bottom: max(6rem, calc(5rem + env(safe-area-inset-bottom)));
+    }
+
+    .container { width: 100%; max-width: 480px; }
+
+    /* ── Header ── */
+    header { text-align: center; padding: 2.8rem 0 1.6rem; }
+
+    .app-title {
+      font-size: 0.58rem;
+      letter-spacing: 7px;
+      text-transform: uppercase;
+      opacity: 0.3;
+    }
+
+    #daily-quote {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1.15rem;
+      color: var(--accent);
+      line-height: 1.6;
+      margin-top: 14px;
+      padding: 0 0.5rem;
+    }
+
+    /* ── Meta Bar ── */
+    .meta-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.9rem 1.1rem;
+      background: var(--card);
+      border-radius: var(--r-lg);
+      border: 1px solid var(--border);
+      margin: 0.5rem 0 1.6rem;
+      font-size: 0.8rem;
+    }
+    #streak-num { color: var(--accent); font-weight: 600; }
+    #date-now   { opacity: 0.38; font-size: 0.68rem; }
+
+    /* ── Section Labels ── */
+    .sl {
+      font-size: 0.57rem;
+      letter-spacing: 3.5px;
+      text-transform: uppercase;
+      opacity: 0.35;
+      margin: 1.7rem 0 0.65rem 0.2rem;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      padding: 1.15rem 1.25rem;
+      border-radius: var(--r-lg);
+      border: 1px solid var(--border);
+      margin-bottom: 0.8rem;
+    }
+
+    /* ── Timer ── */
+    .timer-row { display: flex; justify-content: space-between; align-items: center; }
+
+    #timer-display {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 2px;
+    }
+
+    #timer-btn {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 9px 20px;
+      border-radius: var(--r-sm);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    #timer-btn:active { opacity: 0.65; }
+
+    #read-input-wrap { margin-top: 13px; }
+
+    /* ── Inputs ── */
+    .input-box {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.875rem;
+      padding: 10px 0;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-box::placeholder { opacity: 0.28; }
+    .input-box:focus        { border-color: var(--accent); }
+
+    /* ── Journal Trigger ── */
+    .journal-trigger {
+      background: var(--card);
+      padding: 2.3rem 1rem;
+      border-radius: var(--r-lg);
+      border: 1.5px dashed var(--border);
+      text-align: center;
+      cursor: pointer;
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1rem;
+      color: var(--muted);
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .journal-trigger:active       { opacity: 0.7; }
+    .journal-trigger.saved        { border-style: solid; border-color: var(--accent); color: var(--accent); }
+
+    /* ── Activity Grid ── */
+    .activity-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .act-container { display: flex; flex-direction: column; gap: 6px; }
+
+    .act-btn {
+      background: #1e1e1e;
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      padding: 16px 8px;
+      border-radius: var(--r-lg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.73rem;
+      letter-spacing: 0.3px;
+      user-select: none;
+      transition: border-color 0.18s, background 0.18s, color 0.18s;
+    }
+    .act-btn .icon   { font-size: 1.45rem; pointer-events: none; }
+    .act-btn:active  { opacity: 0.65; }
+    .act-btn.active  {
+      border-color: var(--accent);
+      background: rgba(255,221,160,0.08);
+      color: var(--accent);
+    }
+
+    .act-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.73rem;
+      padding: 6px 2px;
+      outline: none;
+      display: none;
+      transition: border-color 0.2s;
+    }
+    .act-input::placeholder { opacity: 0.28; }
+    .act-input:focus        { border-color: var(--accent); }
+    .act-input.show         { display: block; }
+
+    /* ── Search ── */
+    #search-bar {
+      background: var(--card);
+      border: 1px solid var(--border) !important;
+      border-bottom: 1px solid var(--border) !important;
+      border-radius: var(--r-sm);
+      padding: 10px 14px;
+      margin-bottom: 11px;
+    }
+
+    /* ── Calendar Grid ── */
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+
+    .day {
+      aspect-ratio: 1;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.67rem;
+      color: rgba(245,245,220,0.18);
+      cursor: pointer;
+      transition: opacity 0.12s;
+    }
+    .day:active    { opacity: 0.5; }
+    .day.today     { background: var(--border); color: var(--text); }
+    .day.done      { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+    .day.highlight { border: 2px solid var(--accent); color: var(--accent); }
+
+    /* ── FABs ── */
+    .fab-row {
+      position: fixed;
+      bottom: max(22px, calc(16px + env(safe-area-inset-bottom)));
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 200;
+    }
+
+    .fab {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      border: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+      font-size: 1.15rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.15s, transform 0.12s;
+    }
+    .fab:active    { opacity: 0.7; transform: scale(0.91); }
+    .fab-save      { background: var(--accent); color: var(--bg); }
+    .fab-import    { background: var(--card); color: var(--accent); border: 1px solid var(--border); }
+
+    /* ── Modal ── */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      padding: max(1.6rem, calc(1rem + env(safe-area-inset-top))) 1.3rem max(1rem, env(safe-area-inset-bottom));
+    }
+    .modal.open { display: flex; }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-shrink: 0;
+    }
+
+    #modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem;
+      color: var(--accent);
+      font-style: italic;
+    }
+
+    .close-btn {
+      font-size: 2rem;
+      color: var(--accent);
+      cursor: pointer;
+      line-height: 1;
+      padding: 2px 6px;
+      opacity: 0.75;
+    }
+    .close-btn:hover { opacity: 1; }
+
+    .archive-meta {
+      display: none;
+      margin-bottom: 0.85rem;
+      font-size: 0.72rem;
+      line-height: 1.75;
+      opacity: 0.55;
+      background: rgba(255,255,255,0.035);
+      padding: 10px 14px;
+      border-radius: var(--r-sm);
+      flex-shrink: 0;
+    }
+    .archive-meta.show { display: block; }
+
+    .paper {
+      flex: 1;
+      background: var(--card);
+      border-radius: var(--r-lg);
+      padding: 1.3rem 1.4rem;
+      background-image: linear-gradient(var(--line) 1px, transparent 1px);
+      background-size: 100% 2.15rem;
+      line-height: 2.15rem;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.92rem;
+      border: none;
+      outline: none;
+      resize: none;
+      min-height: 0;
+    }
+    .paper::placeholder { opacity: 0.2; font-style: italic; }
+
+    /* ── Install Banner ── */
+    #install-banner {
+      display: none;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 0.85rem 1rem;
+      margin-bottom: 0.9rem;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.72rem;
+      line-height: 1.5;
+    }
+    #install-banner.show { display: flex; }
+    #install-banner p    { flex: 1; opacity: 0.75; }
+
+    .btn-install {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 7px 14px;
+      border-radius: var(--r-sm);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-dismiss {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      opacity: 0.35;
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 2px 4px;
+      flex-shrink: 0;
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(14px);
+      background: var(--accent);
+      color: var(--bg);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      padding: 8px 20px;
+      border-radius: 50px;
+      opacity: 0;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 8000;
+      transition: opacity 0.25s, transform 0.25s;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Install Banner -->
+  <div id="install-banner">
+    <p>Add Namjooning to your home screen.</p>
+    <button class="btn-install" id="install-btn">Install</button>
+    <button class="btn-dismiss" id="install-dismiss">✕</button>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="app-title">Namjooning</div>
+    <div id="daily-quote">"Loading..."</div>
+  </header>
+
+  <!-- Meta Bar -->
+  <div class="meta-bar">
+    <span>🔥 <span id="streak-num">0</span> day streak</span>
+    <span id="date-now"></span>
+  </div>
+
+  <!-- Reading -->
+  <div class="sl">Core Discipline · Reading</div>
+  <div class="card">
+    <div class="timer-row">
+      <span id="timer-display">15:00</span>
+      <button id="timer-btn" onclick="toggleTimer()">Start</button>
+    </div>
+    <div id="read-input-wrap" style="display:none">
+      <input type="text" id="input-read" class="input-box" placeholder="Book title & chapter…" oninput="save()">
+    </div>
+  </div>
+
+  <!-- Music -->
+  <div class="sl">Core Discipline · Music</div>
+  <div class="card">
+    <input type="text" id="input-music" class="input-box" placeholder="Artist – song discovered today" oninput="save()">
+  </div>
+
+  <!-- Journal -->
+  <div class="sl">Reflection</div>
+  <div class="journal-trigger" id="journal-trigger" onclick="openJournal()">
+    <span id="journal-status">Open Bullet Journal…</span>
+  </div>
+
+  <!-- Activities -->
+  <div class="sl">Intentional Living</div>
+  <div class="activity-grid">
+    <div class="act-container">
+      <div class="act-btn" id="act-museum"   onclick="toggleAct('museum')">  <span class="icon">🏛️</span>Museum</div>
+      <input type="text" id="note-museum"   class="act-input" placeholder="Notes…" oninput="save()">
+    </div>
+    <div class="act-container">
+      <div class="act-btn" id="act-stroll"   onclick="toggleAct('stroll')">  <span class="icon">🌿</span>Stroll</div>
+      <input type="text" id="note-stroll"   class="act-input" placeholder="Notes…" oninput="save()">
+    </div>
+    <div class="act-container">
+      <div class="act-btn" id="act-hiking"   onclick="toggleAct('hiking')">  <span class="icon">⛰️</span>Hiking</div>
+      <input type="text" id="note-hiking"   class="act-input" placeholder="Notes…" oninput="save()">
+    </div>
+    <div class="act-container">
+      <div class="act-btn" id="act-gallery"  onclick="toggleAct('gallery')"> <span class="icon">🎨</span>Gallery</div>
+      <input type="text" id="note-gallery"  class="act-input" placeholder="Notes…" oninput="save()">
+    </div>
+    <div class="act-container" style="grid-column:span 2">
+      <div class="act-btn" id="act-artistry" onclick="toggleAct('artistry')"><span class="icon">✨</span>Artistry Activity</div>
+      <input type="text" id="note-artistry" class="act-input" placeholder="Notes…" oninput="save()">
+    </div>
+  </div>
+
+  <!-- Archive -->
+  <div class="sl">Archive</div>
+  <input type="text" id="search-bar" class="input-box" placeholder="Search your history…" oninput="renderCal()">
+  <div class="cal-grid" id="cal-view" style="margin-top:10px"></div>
+
+</div><!-- /container -->
+
+<!-- FABs -->
+<div class="fab-row">
+  <button class="fab fab-import" onclick="importData()" title="Restore backup">📂</button>
+  <button class="fab fab-save"   onclick="exportData()" title="Save backup">💾</button>
+</div>
+
+<input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)">
+
+<div id="toast"></div>
+
+<!-- Journal Modal -->
+<div id="journal-modal" class="modal">
+  <div class="modal-header">
+    <span id="modal-title">Journal</span>
+    <span class="close-btn" onclick="closeJournal()">×</span>
+  </div>
+  <div id="archive-meta" class="archive-meta"></div>
+  <textarea id="journal-text" class="paper" placeholder="Start writing your reflection…"></textarea>
+</div>
+
+<script>
+// ─── Quote Bank ───────────────────────────────────────────────────────────────
+const QUOTES = [
+  {d:1,  q:"Maybe I made the wrong turn, but I made it."},
+  {d:2,  q:"You can't always control life, but you can control how you see it."},
+  {d:3,  q:"I realized that I can't love anyone else if I don't love myself first."},
+  {d:4,  q:"\"Do you think the world is harsh on you only? Everyone has it hard.\" To the grown-up you — those words can't be your consolation."},
+  {d:5,  q:"Even the night will end and the sun will rise."},
+  {d:6,  q:"Sometimes, you have to let go of the perfect plan to find your true path."},
+  {d:7,  q:"Learn to accept the silence — it teaches you more than noise ever could."},
+  {d:8,  q:"No matter what, I will keep walking forward, even slowly."},
+  {d:9,  q:"Life is full of unknowns, and that's where growth hides."},
+  {d:10, q:"The only time we can truly say we love ourselves is when we're willing to love the people around us."},
+  {d:11, q:"Don't rush your thoughts — the quiet ones shape your story."},
+  {d:12, q:"Even when I doubt myself, I try to remember the person I was before doubt existed."},
+  {d:13, q:"Sometimes pain is the teacher you didn't know you needed."},
+  {d:14, q:"Keep your heart open — even broken pieces can heal and shine."},
+  {d:15, q:"I try to see life not as a problem, but as a canvas waiting for my brush."},
+  {d:16, q:"The night may feel endless, but it's always temporary."},
+  {d:17, q:"I write my feelings down to understand them, not to judge them."},
+  {d:18, q:"Don't let fear of failure stop you from creating."},
+  {d:19, q:"Even small victories count — they're proof you're moving forward."},
+  {d:20, q:"Happiness is not a destination; it's the little moments you notice along the way."},
+  {d:21, q:"They say life is full of paradox. All you gotta do is gettin' used to this marathon."},
+  {d:22, q:"Sometimes we must break before we can rebuild stronger."},
+  {d:23, q:"The person I want to be is shaped by the choices I make today."},
+  {d:24, q:"Music teaches me the things words cannot express."},
+  {d:25, q:"I believe every ending is just a new beginning in disguise."},
+  {d:26, q:"Breathe. Observe. Write. Let thoughts flow without fear."},
+  {d:27, q:"Even when no one notices, your effort is real and matters."},
+  {d:28, q:"I try to be present in moments, not just waiting for the next big thing."},
+  {d:29, q:"Challenges are temporary, but what I learn from them lasts forever."},
+  {d:30, q:"Your voice matters, even if it starts quiet and shaky."},
+  {d:31, q:"I will stay by your side until you survive. I hope you bloom."},
+  {d:32, q:"Life is a sculpture that you cast as you make mistakes and learn from them."},
+  {d:33, q:"Moonchild don't cry."},
+  {d:34, q:"Life is not speed, but direction."},
+  {d:35, q:"To be born means pain — it's just that sometimes one may overcome that pain and turn it to joy."},
+  {d:36, q:"This day will end. The world holds its breath for a very brief moment."},
+  {d:37, q:"There's no need to live your life based on the standards of others."},
+  {d:38, q:"Happiness is not something you achieve. You can feel happy through the process itself."},
+  {d:39, q:"We should find ways to love ourselves, especially when the world makes it hard."},
+  {d:40, q:"I'm just a person who wants to be a better person."},
+  {d:41, q:"To me, the world is a big museum. We're all just looking for the pieces that speak to us."},
+  {d:42, q:"Your ordinary is someone else's extraordinary."},
+  {d:43, q:"I want to be like a tree. Firmly rooted, but reaching for the sky."},
+  {d:44, q:"I hope you know your limits well. But I hope you don't stay within those limits."},
+  {d:45, q:"Everything needs to go through the night to become the morning."},
+  {d:46, q:"Look up. We are all looking at the same sky."},
+  {d:47, q:"No matter who you are, where you're from — speak yourself."},
+  {d:48, q:"Maybe I made a mistake yesterday, but yesterday's me is still me."},
+  {d:49, q:"The stars are brightest when the night is darkest."},
+  {d:50, q:"If you want to love others, I think you should love yourself first."}
+];
+
+// ─── Constants & State ────────────────────────────────────────────────────────
+const DB_KEY   = 'namjooning_v11';
+const ACTS     = ['museum','stroll','hiking','gallery','artistry'];
+const todayStr = new Date().toDateString();
+
+let db        = JSON.parse(localStorage.getItem(DB_KEY)) || { logs: {} };
+let timeLeft  = 900;
+let timerId   = null;
+let timerDone = false;
+let modalDate = todayStr;
+let toastTmr  = null;
+let installEvt = null;
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+function init() {
+  document.getElementById('date-now').innerText = new Date().toLocaleDateString('en-US', {
+    weekday:'short', month:'short', day:'numeric'
+  });
+  migrateOldData();
+  setQuote();
+  loadToday();
+  renderCal();
+  initInstallPrompt();
+  registerSW();
+}
+
+// ─── Migration ────────────────────────────────────────────────────────────────
+function migrateOldData() {
+  try {
+    const old = localStorage.getItem('namjooning_v10');
+    if (old && !Object.keys(db.logs).length) {
+      const parsed = JSON.parse(old);
+      if (parsed?.logs) { db.logs = parsed.logs; persist(); }
+    }
+  } catch(e) {}
+}
+
+// ─── Quote ────────────────────────────────────────────────────────────────────
+function setQuote() {
+  const start = new Date(new Date().getFullYear(), 0, 1);
+  const doy   = Math.round((new Date() - start) / 86400000) + 1;
+  const q     = QUOTES.find(x => x.d === doy) || QUOTES[(doy - 1) % QUOTES.length];
+  document.getElementById('daily-quote').innerText = `"${q.q}"`;
+}
+
+// ─── Timer ────────────────────────────────────────────────────────────────────
+function toggleTimer() {
+  if (timerDone) return;
+  const btn = document.getElementById('timer-btn');
+  if (timerId) {
+    clearInterval(timerId); timerId = null;
+    btn.innerText = 'Resume';
+  } else {
+    btn.innerText = 'Pause';
+    timerId = setInterval(() => {
+      timeLeft--;
+      const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+      document.getElementById('timer-display').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+      if (timeLeft <= 0) {
+        clearInterval(timerId); timerId = null; timerDone = true;
+        btn.style.display = 'none';
+        document.getElementById('timer-display').innerText = '✅ Done';
+        document.getElementById('read-input-wrap').style.display = 'block';
+        document.getElementById('input-read').focus();
+        save();
+        showToast('Reading goal met! 📖');
+      }
+    }, 1000);
+  }
+}
+
+// ─── Activities ───────────────────────────────────────────────────────────────
+function toggleAct(id) {
+  ensureLog(todayStr);
+  db.logs[todayStr].acts[id] = !db.logs[todayStr].acts[id];
+  save();
+}
+
+// ─── Save / Persist ───────────────────────────────────────────────────────────
+function save() {
+  ensureLog(todayStr);
+  const log = db.logs[todayStr];
+  log.read  = document.getElementById('input-read').value;
+  log.music = document.getElementById('input-music').value;
+  // Only persist journal when modal is showing today
+  if (modalDate === todayStr) {
+    log.journal = document.getElementById('journal-text').value;
+  }
+  ACTS.forEach(a => { log.notes[a] = document.getElementById('note-' + a).value; });
+  persist();
+  updateUI();
+}
+
+function persist() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+function ensureLog(d) {
+  if (!db.logs[d])        db.logs[d] = { acts: {}, notes: {} };
+  if (!db.logs[d].acts)   db.logs[d].acts  = {};
+  if (!db.logs[d].notes)  db.logs[d].notes = {};
+}
+
+// ─── Update UI ────────────────────────────────────────────────────────────────
+function updateUI() {
+  const log = db.logs[todayStr] || { acts:{}, notes:{} };
+  ACTS.forEach(a => {
+    const on = !!(log.acts && log.acts[a]);
+    document.getElementById('act-' + a).classList.toggle('active', on);
+    document.getElementById('note-' + a).classList.toggle('show', on);
+  });
+  const saved = (log.journal?.length || 0) > 5;
+  document.getElementById('journal-status').innerText = saved ? 'Reflection Saved ✓' : 'Open Bullet Journal…';
+  document.getElementById('journal-trigger').classList.toggle('saved', saved);
+  updateStreak();
+  renderCal();
+}
+
+// ─── Load Today ───────────────────────────────────────────────────────────────
+function loadToday() {
+  const l = db.logs[todayStr];
+  if (!l) { updateUI(); return; }
+  document.getElementById('input-read').value  = l.read  || '';
+  document.getElementById('input-music').value = l.music || '';
+  document.getElementById('journal-text').value = l.journal || '';
+  ACTS.forEach(a => { document.getElementById('note-' + a).value = l.notes?.[a] || ''; });
+  if (l.read?.length > 0) {
+    timerDone = true;
+    document.getElementById('timer-btn').style.display = 'none';
+    document.getElementById('timer-display').innerText = '✅ Done';
+    document.getElementById('read-input-wrap').style.display = 'block';
+  }
+  updateUI();
+}
+
+// ─── Streak ───────────────────────────────────────────────────────────────────
+function updateStreak() {
+  let s = 0;
+  const d = new Date();
+  for (let i = 0; i < 366; i++) {
+    const k = d.toDateString(), l = db.logs[k];
+    if (l?.read && (l?.journal?.length || 0) > 5) { s++; d.setDate(d.getDate() - 1); }
+    else if (k === todayStr)                        { d.setDate(d.getDate() - 1); }
+    else break;
+  }
+  document.getElementById('streak-num').innerText = s;
+}
+
+// ─── Calendar ─────────────────────────────────────────────────────────────────
+function renderCal() {
+  const grid   = document.getElementById('cal-view');
+  const search = document.getElementById('search-bar').value.toLowerCase().trim();
+  grid.innerHTML = '';
+  const now  = new Date();
+  const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  for (let i = 1; i <= days; i++) {
+    const dStr = new Date(now.getFullYear(), now.getMonth(), i).toDateString();
+    const log  = db.logs[dStr];
+    const div  = document.createElement('div');
+    let cls = 'day';
+    if (dStr === todayStr)                              cls += ' today';
+    if (log?.read && (log?.journal?.length || 0) > 5)  cls += ' done';
+    if (search && log && JSON.stringify(log).toLowerCase().includes(search)) cls += ' highlight';
+    div.className = cls;
+    div.innerText = i;
+    div.onclick   = () => openArchive(dStr);
+    grid.appendChild(div);
+  }
+}
+
+// ─── Journal / Archive Modal ──────────────────────────────────────────────────
+function openJournal()  { openArchive(todayStr); }
+
+function openArchive(dateStr) {
+  modalDate = dateStr;
+  const log    = db.logs[dateStr];
+  const meta   = document.getElementById('archive-meta');
+  const jtarea = document.getElementById('journal-text');
+
+  document.getElementById('modal-title').innerText =
+    dateStr === todayStr ? "Today's Journal" : dateStr;
+
+  if (log) {
+    const acts = Object.keys(log.acts || {})
+      .filter(k => log.acts[k])
+      .map(k => `${k}${log.notes?.[k] ? ` (${log.notes[k]})` : ''}`)
+      .join(', ');
+    meta.innerHTML =
+      `<strong>Read:</strong> ${log.read || '—'}&nbsp;&nbsp;` +
+      `<strong>Music:</strong> ${log.music || '—'}&nbsp;&nbsp;` +
+      `<strong>Activities:</strong> ${acts || 'None'}`;
+    meta.classList.add('show');
+    jtarea.value = log.journal || '';
+  } else {
+    meta.classList.remove('show');
+    jtarea.value = '';
+  }
+
+  // Journal textarea: editable only for today
+  jtarea.readOnly = (dateStr !== todayStr);
+  jtarea.style.opacity = (dateStr !== todayStr) ? '0.55' : '1';
+
+  document.getElementById('journal-modal').classList.add('open');
+  if (dateStr === todayStr) setTimeout(() => jtarea.focus(), 80);
+}
+
+function closeJournal() {
+  document.getElementById('journal-modal').classList.remove('open');
+  if (modalDate === todayStr) {
+    ensureLog(todayStr);
+    db.logs[todayStr].journal = document.getElementById('journal-text').value;
+    persist();
+    updateUI();
+  }
+  modalDate = todayStr;
+}
+
+// ─── Export / Import ──────────────────────────────────────────────────────────
+function exportData() {
+  const name = `namjooning_${new Date().toLocaleDateString('en-CA')}.json`;
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  showToast('Backup saved 💾');
+}
+
+function importData() { document.getElementById('import-file').click(); }
+
+function handleImport(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const imp = JSON.parse(ev.target.result);
+      if (!imp.logs) throw new Error();
+      db.logs = { ...db.logs, ...imp.logs };
+      persist(); loadToday();
+      showToast('Backup restored ✅');
+    } catch { showToast('Import failed — invalid file'); }
+  };
+  r.readAsText(file);
+  e.target.value = '';
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.innerText = msg; t.classList.add('show');
+  clearTimeout(toastTmr);
+  toastTmr = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// ─── PWA Install ──────────────────────────────────────────────────────────────
+function initInstallPrompt() {
+  if (window.matchMedia('(display-mode: standalone)').matches) return;
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); installEvt = e;
+    document.getElementById('install-banner').classList.add('show');
+  });
+
+  document.getElementById('install-btn').addEventListener('click', async () => {
+    if (!installEvt) return;
+    installEvt.prompt();
+    const { outcome } = await installEvt.userChoice;
+    installEvt = null;
+    document.getElementById('install-banner').classList.remove('show');
+    if (outcome === 'accepted') showToast('App installed! 🎉');
+  });
+
+  document.getElementById('install-dismiss').addEventListener('click', () => {
+    document.getElementById('install-banner').classList.remove('show');
+  });
+}
+
+// ─── Service Worker ───────────────────────────────────────────────────────────
+function registerSW() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+}
+
+init();
+</script>
+</body>
+</html>
